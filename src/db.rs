@@ -62,8 +62,8 @@ fn get_filename() -> String {
 
 async fn hash_db(db: Db) -> i64 {
     db.lock().await.iter().fold(0,|acc, kv| {
-        let (_,v) = kv;
-        return acc + v.count;
+        let (_,count) = kv;
+        return acc + count;
     })
 }
 

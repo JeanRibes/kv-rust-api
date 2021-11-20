@@ -24,7 +24,7 @@ pub async fn get_kudos(slug: String,db: Db) -> Result<Box<dyn warp::Reply>, Infa
             return Ok(Box::new(StatusCode::NOT_FOUND))
         }
         Some(kudos) => {
-            return Ok(Box::new(warp::reply::json(&kudos.count.clone())))
+            return Ok(Box::new(warp::reply::json(&kudos)))
         }
     }
 }
@@ -33,20 +33,17 @@ pub async fn send_kudos(slug: String, db: Db) -> Result<impl warp::Reply, Infall
     let mut store = db.lock().await;
     let slug_insert = slug.clone();
     let slug_get = slug.clone();
-    match store.get_mut(&slug_get) {
+    match store.get(&slug_get) {
         Some(kudos) => {
-            kudos.count+=1;
-            return Ok(warp::reply::json(&kudos.count))
+            let kudos = store.clone().insert(slug_get.clone(), *kudos +1 ).unwrap();
+            return Ok(warp::reply::json(&kudos));
             /*let mut kudos = kudos.clone();
             kudos.count +=1;
             return Ok(warp::reply::json(&kudos));*/
         }
         None => {
-            let kudos = Kudos{
-                count: 1,
-                slug
-            };
-            store.insert(slug_insert,kudos.clone());
+            let kudos = 1;
+            store.insert(slug_insert,1);
             return Ok(warp::reply::json(&kudos));
         }
     }
