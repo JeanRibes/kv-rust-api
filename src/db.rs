@@ -11,9 +11,13 @@ use serde_json::value::Serializer;
 use serde::Serialize;
 use std::io::Write;
 use std::env::VarError;
+use tokio::time::{Duration, sleep};
+use tokio::signal;
+use std::time::{Instant, SystemTime};
+use std::fs;
+use std::process::exit;
 
-
-pub type Db = Arc<Mutex<HashMap<String,Kudos>>>;
+pub type Db = Arc<Mutex<HashMap<String, Kudos>>>;
 
 pub fn init_db() -> Db {
     let file = File::open(get_filename());
@@ -28,7 +32,7 @@ pub fn init_db() -> Db {
     }
 }
 
-pub fn save_db(db: HashMap<String,Kudos>){
+pub fn save_db(db: HashMap<String, Kudos>) {
     let file = File::create(get_filename());
     match file {
         Ok(mut json) => {
@@ -42,7 +46,7 @@ pub fn save_db(db: HashMap<String,Kudos>){
                     println!("could not write DB to file 'db.json', here is your data: {}", value);
                 }
                 Err(e) => {
-                    println!("serializeation error !!: {}",e);
+                    println!("serializeation error !!: {}", e);
                 }
             };
         }
@@ -51,7 +55,41 @@ pub fn save_db(db: HashMap<String,Kudos>){
 
 fn get_filename() -> String {
     match std::env::var("FILENAME") {
-        Ok(filename) => {filename}
-        Err(_) => {"db.json".to_string()}
+        Ok(filename) => { filename }
+        Err(_) => { "db.json".to_string() }
     }
+}
+
+async fn hash_db(db: Db) -> i64 {
+    db.lock().await.iter().fold(0,|acc, kv| {
+        let (_,v) = kv;
+        return acc + v.count;
+    })
+}
+
+pub async fn sync_db(db: Db) {
+    println!("Syncing database");
+    save_db(db.lock().await.clone());
+}
+
+pub async fn save_daemon(db: Db) {
+    println!("hello from task");
+    let duration = Duration::new(300, 0);
+    let mut last_hash = hash_db(db.clone()).await;
+    loop {
+        let hash = hash_db(db.clone()).await;
+        if hash != last_hash {
+            sync_db(db.clone()).await;
+            last_hash = hash;
+        }
+        sleep(duration).await;
+    }
+}
+
+pub async fn save_exit(db: Db) {
+    signal::ctrl_c().await;
+    println!("SIGTERM...");
+    sync_db(db.clone()).await;
+    println!("DB Saved, exiting !");
+    exit(0);
 }

@@ -1,15 +1,26 @@
 use warp::Filter;
+use tokio::time::{sleep, Duration};
+use tokio::task;
+use crate::db::sync_db;
+use tokio::signal;
+use std::process::exit;
 
 mod models;
 mod db;
 mod handlers;
 mod routes;
 
+
 #[tokio::main]
 async fn main() {
+    println!("hello, look at 0.0.0.0:3030");
     let db = db::init_db();
-    let routes = routes::routes(db);
+    let routes = routes::routes(db.clone());
 
+    task::spawn(db::save_daemon(db.clone()));
 
-    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
+    task::spawn(db::save_exit(db.clone()));
+
+    warp::serve(routes).run(([0,0,0,0], 3030)).await;
+    println!("end")
 }
