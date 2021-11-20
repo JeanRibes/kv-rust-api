@@ -54,7 +54,7 @@ pub fn save_db(db: HashMap<String, Kudos>) {
 }
 
 fn get_filename() -> String {
-    match std::env::var("FILENAME") {
+    match std::env::var("DB_FILE") {
         Ok(filename) => { filename }
         Err(_) => { "db.json".to_string() }
     }

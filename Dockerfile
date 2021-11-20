@@ -22,6 +22,6 @@ COPY --from=builder /workdir/target/release/kudos /main
 
 VOLUME /data
 EXPOSE 3030
-ENV FILENAME "/data/kudos_db.json"
+ENV DB_FILE "/data/kudos_db.json"
 
 CMD ["/main"]
