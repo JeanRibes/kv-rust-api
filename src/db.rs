@@ -10,12 +10,13 @@ use serde_json::to_string;
 use serde_json::value::Serializer;
 use serde::Serialize;
 use std::io::Write;
+use std::env::VarError;
 
 
 pub type Db = Arc<Mutex<HashMap<String,Kudos>>>;
 
 pub fn init_db() -> Db {
-    let file = File::open("db.json");
+    let file = File::open(get_filename());
     match file {
         Ok(json) => {
             let data = from_reader(json).expect("cannot read db.json");
@@ -28,11 +29,11 @@ pub fn init_db() -> Db {
 }
 
 pub fn save_db(db: HashMap<String,Kudos>){
-    let file = File::create("db.json");
+    let file = File::create(get_filename());
     match file {
         Ok(mut json) => {
             //db.serialize(serde_json::ser::Serializer::new(json));
-            json.write(serde_json::to_string(&db).expect("lol").as_ref());
+            json.write(serde_json::to_string(&db).expect("lol").as_ref()).expect("could not write to file");
             //to_writer(json, &db);
         }
         Err(_) => {
@@ -46,4 +47,11 @@ pub fn save_db(db: HashMap<String,Kudos>){
             };
         }
     };
+}
+
+fn get_filename() -> String {
+    match std::env::var("FILENAME") {
+        Ok(filename) => {filename}
+        Err(_) => {"db.json".to_string()}
+    }
 }
