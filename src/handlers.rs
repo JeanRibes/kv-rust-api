@@ -36,7 +36,7 @@ pub async fn send_kudos(slug: String, db: Db) -> Result<impl warp::Reply, Infall
     match store.get_mut(&slug_get) {
         Some(kudos) => {
             kudos.count+=1;
-            return Ok(warp::reply::json(&kudos))
+            return Ok(warp::reply::json(&kudos.count))
             /*let mut kudos = kudos.clone();
             kudos.count +=1;
             return Ok(warp::reply::json(&kudos));*/
