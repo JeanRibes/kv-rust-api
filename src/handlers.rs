@@ -14,7 +14,7 @@ pub async fn get_kudos(slug: String, db: Db) -> Result<impl warp::Reply, Infalli
     let store = db.lock().await;
     let kudos = match store.get(&slug) {
         Some(kudos) => kudos,
-        None => &1,
+        None => &0,
     };
     Ok(warp::reply::json(kudos))
 }
