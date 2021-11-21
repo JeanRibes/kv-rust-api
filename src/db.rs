@@ -14,15 +14,15 @@ pub type Db = Arc<Mutex<HashMap<String, Kudos>>>;
 
 pub fn init_db() -> Db {
     let file = File::open(get_filename());
-    match file {
+    let data = match file {
         Ok(json) => {
-            let data = from_reader(json).expect("cannot read db.json");
-            return Arc::new(Mutex::new(data));
+            from_reader(json).expect("cannot read db.json")
         }
         Err(_) => {
-            return Arc::new(Mutex::new(HashMap::new()));
+            HashMap::new()
         }
-    }
+    };
+    return Arc::new(Mutex::new(data));
 }
 
 pub fn save_db(db: HashMap<String, Kudos>) {
@@ -53,36 +53,36 @@ fn get_filename() -> String {
     }
 }
 
-async fn hash_db(db: Db) -> i64 {
-    db.lock().await.iter().fold(0,|acc, kv| {
+async fn hash_db(db: &Db) -> i64 {
+    db.lock().await.iter().fold(0,|acc, kv| { //Functionnal Programming yay!
         let (_,count) = kv;
         return acc + count;
     })
 }
 
-pub async fn sync_db(db: Db) {
+pub async fn sync_db(db: &Db) {
     println!("Syncing database");
     save_db(db.lock().await.clone());
 }
 
+
 pub async fn save_daemon(db: Db) {
-    println!("hello from task");
-    let duration = Duration::new(300, 0);
-    let mut last_hash = hash_db(db.clone()).await;
+    let save_interval = Duration::new(300, 0);
+    let mut last_hash = hash_db(&db).await;
     loop {
-        let hash = hash_db(db.clone()).await;
+        let hash = hash_db(&db).await;
         if hash != last_hash {
-            sync_db(db.clone()).await;
+            sync_db(&db).await;
             last_hash = hash;
         }
-        sleep(duration).await;
+        sleep(save_interval).await;
     }
 }
 
 pub async fn save_exit(db: Db) {
     signal::ctrl_c().await.expect("couldn't listen to signal");
     println!("SIGTERM...");
-    sync_db(db.clone()).await;
+    sync_db(&db).await;
     println!("DB Saved, exiting !");
     exit(0);
 }

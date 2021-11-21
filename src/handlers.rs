@@ -10,38 +10,24 @@ pub async fn list_kudos(db: Db) -> Result<impl warp::Reply, Infallible> {
     Ok(warp::reply::json(&store.clone()))
 }
 
-pub async fn get_kudos(slug: String,db: Db) -> Result<Box<dyn warp::Reply>, Infallible> {
+pub async fn get_kudos(slug: String, db: Db) -> Result<impl warp::Reply, Infallible> {
     let store = db.lock().await;
-    let obj = store.get(slug.as_str());
-    //Ok(warp::reply::json(&obj.clone()))
-    match obj {
-        None => {
-            return Ok(Box::new(warp::reply::json(&0)))
-        }
-        Some(kudos) => {
-            return Ok(Box::new(warp::reply::json(&kudos)))
-        }
-    }
+    let kudos = match store.get(&slug) {
+        Some(kudos) => kudos,
+        None => &1,
+    };
+    Ok(warp::reply::json(kudos))
 }
 
 pub async fn send_kudos(slug: String, db: Db) -> Result<impl warp::Reply, Infallible> {
     let mut store = db.lock().await;
-    let slug_insert = slug.clone();
-    let slug_get = slug.clone();
-    match store.get(&slug_get) {
-        Some(kudos) => {
-            let kudos = store.clone().insert(slug_get.clone(), *kudos +1 ).unwrap();
-            return Ok(warp::reply::json(&kudos));
-            /*let mut kudos = kudos.clone();
-            kudos.count +=1;
-            return Ok(warp::reply::json(&kudos));*/
-        }
-        None => {
-            let kudos = 1;
-            store.insert(slug_insert,1);
-            return Ok(warp::reply::json(&kudos));
-        }
-    }
+
+    let kudos = match store.get(&slug) {
+        Some(kudos) => *kudos + 1,
+        None => 1
+    };
+    store.insert(slug, kudos);
+    Ok(warp::reply::json(&kudos))
 }
 
 pub async fn flush_db(db: Db) -> Result<impl warp::Reply, Infallible> {
