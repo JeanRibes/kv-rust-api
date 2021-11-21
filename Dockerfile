@@ -12,7 +12,7 @@ RUN cargo build
 RUN cargo build --release
 
 COPY src src
-RUN rm src/dummy.rs target/release/kudos
+RUN rm -r src/dummy.rs target/release/kudos target/release/deps/kudos*
 RUN cargo build --release
 
 
@@ -22,6 +22,6 @@ COPY --from=builder /workdir/target/release/kudos /main
 
 VOLUME /data
 EXPOSE 3030
-ENV DB_FILE "/data/kudos_db.json"
+ENV DB_FILE "/data/db.json"
 
 CMD ["/main"]

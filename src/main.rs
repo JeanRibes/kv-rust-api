@@ -1,9 +1,4 @@
-use warp::Filter;
-use tokio::time::{sleep, Duration};
 use tokio::task;
-use crate::db::sync_db;
-use tokio::signal;
-use std::process::exit;
 
 mod models;
 mod db;

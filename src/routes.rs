@@ -1,13 +1,8 @@
 
-use std::convert::Infallible;
 use warp::{self, Filter};
 
 use crate::db::Db;
 use crate::handlers;
-use crate::models::Kudos;
-use warp::filters::BoxedFilter;
-use warp::filters::path::Exact;
-use tokio::macros::support::Future;
 
 pub fn routes(db: Db) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone  {
     get_kudos(db.clone())

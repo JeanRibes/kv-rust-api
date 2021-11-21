@@ -4,11 +4,6 @@ use warp;
 use crate::db::Db;
 use crate::db::save_db;
 use warp::http::StatusCode;
-use crate::models::Kudos;
-use std::borrow::{BorrowMut, Borrow};
-use std::collections::HashMap;
-use std::sync::MutexGuard;
-use serde::de::IntoDeserializer;
 
 pub async fn list_kudos(db: Db) -> Result<impl warp::Reply, Infallible> {
     let store = db.lock().await;

@@ -1,21 +1,14 @@
 use std::sync::Arc;
-use tokio::sync::{Mutex, MutexGuard};
 
 use crate::models::Kudos;
 use std::collections::HashMap;
 use std::fs::File;
-use serde_json::{from_reader, Error};
-use serde_json::to_writer;
-use serde_json::to_string;
-use serde_json::value::Serializer;
-use serde::Serialize;
 use std::io::Write;
-use std::env::VarError;
 use tokio::time::{Duration, sleep};
 use tokio::signal;
-use std::time::{Instant, SystemTime};
-use std::fs;
 use std::process::exit;
+use tokio::sync::Mutex;
+use serde_json::from_reader;
 
 pub type Db = Arc<Mutex<HashMap<String, Kudos>>>;
 
@@ -87,7 +80,7 @@ pub async fn save_daemon(db: Db) {
 }
 
 pub async fn save_exit(db: Db) {
-    signal::ctrl_c().await;
+    signal::ctrl_c().await.expect("couldn't listen to signal");
     println!("SIGTERM...");
     sync_db(db.clone()).await;
     println!("DB Saved, exiting !");
