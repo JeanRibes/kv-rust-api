@@ -16,7 +16,7 @@ pub async fn get_kudos(slug: String,db: Db) -> Result<Box<dyn warp::Reply>, Infa
     //Ok(warp::reply::json(&obj.clone()))
     match obj {
         None => {
-            return Ok(Box::new(StatusCode::NOT_FOUND))
+            return Ok(Box::new(warp::reply::json(&0)))
         }
         Some(kudos) => {
             return Ok(Box::new(warp::reply::json(&kudos)))
